@@ -1,3 +1,6 @@
+
+<img width="612" alt="Screenshot 2024-09-25 at 3 06 21 PM" src="https://github.com/user-attachments/assets/adf9e8b0-15e1-43fd-8eb1-bdb94165ed22">
+
 # ElevenLabs Video Dubbing Application
 
 ## Description
