@@ -79,10 +79,4 @@ English, Hindi, Portuguese, Chinese, Spanish, French, German, Japanese, Arabic, 
 - The dubbing process may take some time, especially for longer videos.
 - The quality of dubbing depends on the ElevenLabs API and may vary based on the complexity of the video and languages involved.
 
-## Support
 
-For any issues or feature requests, please open an issue in the GitHub repository or contact the developer.
-
-## License
-
-[Specify your license here, e.g., MIT License, GPL, etc.]
