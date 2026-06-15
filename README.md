@@ -12,27 +12,36 @@ Key features:
 - Multiple language options for source and target languages
 - Custom output directory selection
 - Real-time progress updates during the dubbing process
+- A separate **Text to Speech** tab powered by [60db](https://docs.60db.ai) that turns typed text into an audio (WAV) file
 
 ## Setup
 
 ### Prerequisites
 
 - Python 3.7 or higher
-- An ElevenLabs API key
+- An ElevenLabs API key (for video dubbing)
+- A 60db API key (for the Text to Speech tab)
 
 ### Installation
 
-1. Clone this repository or download the `dub.py` file.
+1. Clone this repository or download the `dub.py` and `tts_providers.py` files.
 
 2. Install the required Python packages:
    ```
-   pip install elevenlabs gradio python-dotenv
+   pip install -r requirements.txt
    ```
+   (or `pip install elevenlabs gradio python-dotenv websocket-client`)
 
-3. Create a `.env` file in the same directory as `dub.py` and add your ElevenLabs API key:
+3. Create a `.env` file in the same directory as `dub.py` and add your API keys:
    ```
    ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+   SIXTYDB_API_KEY=your_60db_api_key_here
+   # Optional override; defaults to wss://api.60db.ai/ws/tts
+   # SIXTYDB_WS_URL=wss://api.60db.ai/ws/tts
    ```
+
+   The two keys are independent: video dubbing only needs `ELEVENLABS_API_KEY`,
+   and the Text to Speech tab only needs `SIXTYDB_API_KEY`.
 
 ## Usage
 
@@ -59,9 +68,16 @@ Key features:
      d. Specify an output directory (default is "output")
      e. Click "Dub Video from URL"
 
+   - For Text to Speech (60db):
+     a. Enter the text you want spoken
+     b. Optionally set a 60db Voice ID (the default voice is pre-filled)
+     c. Adjust Speed, Stability, and Similarity to taste
+     d. Specify an output directory (default is "output")
+     e. Click "Generate Speech" — the resulting WAV plays inline and is saved to the output directory
+
 4. Wait for the dubbing process to complete. You'll see progress updates in the interface.
 
-5. Once completed, the application will provide the path to the dubbed video file.
+5. Once completed, the application will provide the path to the dubbed video file (or, for Text to Speech, the generated audio file).
 
 ## Supported Languages
 

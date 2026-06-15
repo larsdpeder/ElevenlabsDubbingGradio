@@ -2,9 +2,12 @@ import gradio as gr
 import os
 import time
 import json
-from typing import Optional, Dict
+import uuid
+from typing import Optional, Dict, Tuple
 from elevenlabs import ElevenLabs
 from dotenv import load_dotenv
+
+from tts_providers import get_tts_provider, SIXTYDB_DEFAULT_VOICE
 
 # Load environment variables
 load_dotenv()
@@ -116,6 +119,52 @@ def create_dub(input_type: str, input_data, source_language: str, target_languag
                 error_message = f"Error {e.status_code}: {e.body}"
         return f"An error occurred: {error_message}"
 
+def synthesize_speech(
+    text: str,
+    voice_id: str,
+    speed: float,
+    stability: int,
+    similarity: int,
+    output_dir: str,
+    progress: Optional[gr.Progress] = None,
+) -> Tuple[Optional[str], str]:
+    """Generate speech from text using the 60db TTS provider.
+
+    Returns a (audio_file_path, status_message) tuple. The audio path feeds the
+    gr.Audio component; on failure the path is None and the message explains why.
+    """
+    if not text or not text.strip():
+        return None, "Please enter some text to synthesize."
+
+    try:
+        if progress:
+            progress(0.2, desc="Connecting to 60db TTS")
+
+        provider = get_tts_provider("60db")
+
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, f"tts_{uuid.uuid4().hex}.wav")
+
+        if progress:
+            progress(0.5, desc="Synthesizing speech")
+
+        provider.synthesize(
+            text,
+            output_path,
+            voice_id=(voice_id or "").strip() or None,
+            speed=speed,
+            stability=int(stability),
+            similarity=int(similarity),
+        )
+
+        if progress:
+            progress(1, desc="Speech generated")
+        return output_path, f"Speech generated successfully! Saved to: {output_path}"
+    except Exception as e:
+        print(f"Error in synthesize_speech: {str(e)}")
+        return None, f"An error occurred: {str(e)}"
+
+
 # Create Gradio interface
 with gr.Blocks() as iface:
     gr.Markdown("# ElevenLabs Video Dubbing Interface")
@@ -135,6 +184,17 @@ with gr.Blocks() as iface:
         url_output_dir = gr.Textbox(label="Output Directory", value="output", placeholder="Enter the output directory path")
         url_submit = gr.Button("Dub Video from URL")
         url_output = gr.Textbox(label="Result")
+
+    with gr.Tab("Text to Speech (60db)"):
+        tts_text = gr.Textbox(label="Text", lines=5, placeholder="Enter the text to convert to speech")
+        tts_voice = gr.Textbox(label="Voice ID", value=SIXTYDB_DEFAULT_VOICE, placeholder="60db voice ID (leave default if unsure)")
+        tts_speed = gr.Slider(0.5, 2.0, value=1.0, step=0.1, label="Speed")
+        tts_stability = gr.Slider(0, 100, value=50, step=1, label="Stability (higher = more consistent)")
+        tts_similarity = gr.Slider(0, 100, value=75, step=1, label="Similarity (voice match fidelity)")
+        tts_output_dir = gr.Textbox(label="Output Directory", value="output", placeholder="Enter the output directory path")
+        tts_submit = gr.Button("Generate Speech")
+        tts_audio = gr.Audio(label="Generated Speech", type="filepath")
+        tts_output = gr.Textbox(label="Result")
 
     file_submit.click(
         create_dub,
@@ -158,6 +218,19 @@ with gr.Blocks() as iface:
             url_output_dir
         ],
         outputs=url_output
+    )
+
+    tts_submit.click(
+        synthesize_speech,
+        inputs=[
+            tts_text,
+            tts_voice,
+            tts_speed,
+            tts_stability,
+            tts_similarity,
+            tts_output_dir
+        ],
+        outputs=[tts_audio, tts_output]
     )
 
 iface.launch()
